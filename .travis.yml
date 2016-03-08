@@ -3,3 +3,4 @@ os:
 language: cpp
 compiler: clang
 script: make
+
