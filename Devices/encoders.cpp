@@ -71,3 +71,85 @@ bool GoPiGo::WheelEncoders::SetTargeting(bool AMotor1, bool AMotor2, encoderpuls
    return ret;
 }
 
+GoPiGo::WheelEncodersWithErrorDetection::WheelEncodersWithErrorDetection(IBoard * AConnection) : ConnectedDevice(AConnection)
+{
+   StartValue1 = 0;
+   StartValue2 = 0;
+   Target1 = 0;
+   Target2 = 0;
+   LatestDistance1 = 0;
+   LatestDistance2 = 0;
+}
+
+GoPiGo::encoderpulses_t GoPiGo::WheelEncodersWithErrorDetection::GetCurrentEncoderValue(int AMotorId)
+{
+   Transaction Lock(this->Connection);
+
+   this->Connection->WriteBlock(enc_read_cmd, AMotorId, 0, 0);
+
+   return this->Connection->ReadWord();
+}
+
+GoPiGo::encoderpulses_t GoPiGo::WheelEncodersWithErrorDetection::GetDistance(encoderpulses_t AStartValue, encoderpulses_t ACurrentValue)
+{
+   if (ACurrentValue < AStartValue)
+   {
+      // value has overflowed
+      return (65535 - AStartValue) + ACurrentValue;
+   }
+   else
+   {
+      return ACurrentValue - AStartValue;
+   }
+}
+
+GoPiGo::encoderpulses_t GoPiGo::WheelEncodersWithErrorDetection::TravelDistance1()
+{
+   encoderpulses_t NewValue = GetCurrentEncoderValue(0);
+   LatestDistance1 = GetDistance(StartValue1, NewValue);
+   return LatestDistance1;
+}
+
+GoPiGo::encoderpulses_t GoPiGo::WheelEncodersWithErrorDetection::TravelDistance2()
+{
+   encoderpulses_t NewValue = GetCurrentEncoderValue(1);
+   LatestDistance2 = GetDistance(StartValue2, NewValue);
+   return LatestDistance2;
+}
+
+void GoPiGo::WheelEncodersWithErrorDetection::Start(encoderpulses_t ATarget1, encoderpulses_t ATarget2)
+{
+   Target1 = ATarget1;
+   Target2 = ATarget2;
+
+   StartValue1 = GetCurrentEncoderValue(0);
+   StartValue2 = GetCurrentEncoderValue(1);
+}
+
+bool GoPiGo::WheelEncodersWithErrorDetection::CheckShouldStop()
+{
+   if ((Target1 != 0) && (Target2 != 0))
+   {
+      return (TravelDistance1() >= Target1) || (TravelDistance2() >= Target2);
+   }
+   else if (Target1 > 0)
+   {
+      return (TravelDistance1() >= Target1);
+   }
+   else if (Target2 > 0)
+   {
+      return (TravelDistance2() >= Target2);
+   }
+
+   return true;
+}
+
+GoPiGo::encoderpulses_t GoPiGo::WheelEncodersWithErrorDetection::GetLatestDistance1()
+{
+   return LatestDistance1;
+}
+
+GoPiGo::encoderpulses_t GoPiGo::WheelEncodersWithErrorDetection::GetLatestDistance2()
+{
+   return LatestDistance2;
+}

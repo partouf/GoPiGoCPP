@@ -5,7 +5,7 @@
 
 namespace GoPiGo
 {
-   typedef int16_t encoderpulses_t;
+   typedef uint16_t encoderpulses_t;
    typedef char encstatus_t;
    typedef char trimstatus_t;
 
@@ -42,5 +42,35 @@ namespace GoPiGo
 
       // Set encoder target to move the GoPiGo to a set distance (18 pulses per rotation) (with the default wheels this is about 19CM?)
       bool SetTargeting(bool AMotor1, bool AMotor2, encoderpulses_t ATarget);
+   };
+
+   class WheelEncodersWithErrorDetection : public ConnectedDevice
+   {
+   protected:
+      encoderpulses_t StartValue1;
+      encoderpulses_t StartValue2;
+
+      encoderpulses_t Target1;
+      encoderpulses_t Target2;
+
+      encoderpulses_t LatestDistance1;
+      encoderpulses_t LatestDistance2;
+
+      encoderpulses_t GetCurrentEncoderValue(int AMotorId);
+
+      encoderpulses_t GetDistance(encoderpulses_t AStartValue, encoderpulses_t ACurrentValue);
+
+      encoderpulses_t TravelDistance1();
+      encoderpulses_t TravelDistance2();
+   public:
+      WheelEncodersWithErrorDetection(IBoard *AConnection);
+
+      void Start(encoderpulses_t ATarget1, encoderpulses_t ATarget2);
+
+      bool CheckShouldStop();
+
+      encoderpulses_t GetLatestDistance1();
+
+      encoderpulses_t GetLatestDistance2();
    };
 };
