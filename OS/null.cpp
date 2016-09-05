@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <windows.h>
+#include <stdexcept>
+
 
 GoPiGo::NullBoard::NullBoard(int AI2CDeviceNumber) : IBoard()
 {
