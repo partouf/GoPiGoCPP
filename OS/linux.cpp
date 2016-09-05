@@ -99,7 +99,7 @@ char GoPiGo::LinuxBoard::ReadByte()
    int reg_size = 1;
 
    if (::read(fd, r_buf, reg_size) != reg_size) {
-      throw new std::exception();
+      throw new std::runtime_error("Error reading from GoPiGo");
 
       return -1;
    }
